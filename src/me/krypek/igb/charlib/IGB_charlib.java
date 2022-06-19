@@ -5,9 +5,10 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import me.krypek.igb.cl1.IGB_MA;
+import me.krypek.utils.Pair;
+import me.krypek.utils.Utils;
 
 public class IGB_charlib {
 
@@ -16,12 +17,13 @@ public class IGB_charlib {
 
 		IGB_charlib charlib = new IGB_charlib(font, Color.black, Color.white, 32, 127);
 
-		String l2 = charlib.getL2Code();
+		String l2Code = charlib.getL2Code();
+		Utils.writeIntoFile("/home/krypek/Desktop/IGB/L2/charlib.igb_l2", l2Code);
 
-		PrintWriter pw = new PrintWriter("/home/krypek/Desktop/IGB/L2/charlib.igb_l2");
-		pw.println(l2);
-		pw.close();
-		System.out.println(l2);
+		var pair = charlib.getFormatedL2Code();
+		Utils.serialize(pair, "/home/krypek/Desktop/IGB/L2/charlib.bin");
+
+		// System.out.println(l2Code);
 	}
 
 	private final Font font;
@@ -85,10 +87,10 @@ public class IGB_charlib {
 	private final int START_CELL = IGB_MA.CHARLIB_TEMP_START;
 
 	private final String COMPILERVAR_STRING = """
-			$ramcell = 20;
-			$ramlimit = 300;
-			$startLine = 3500;
-			$lenlimit = 300;
+			$ramcell = 0;
+			$ramlimit = 0;
+			$startLine = 0;
+			$lenlimit = 3500;
 			$thread = 0;
 			""";
 
@@ -114,13 +116,19 @@ public class IGB_charlib {
 		return sb.toString();
 	}
 
+	public Pair<String[], int[]> getFormatedL2Code() {
+		String l2 = getL2Code();
+		var pair = me.krypek.igb.cl2.PrecompilationFile.format(l2);
+		return pair;
+	}
+
 	public String getL2Code() {
 		StringBuilder sb = new StringBuilder(100);
 		sb.append(COMPILERVAR_STRING);
 		sb.append(FUNC_STRING);
 
-		int r = fontColor.getRed(), g = fontColor.getBlue(), b = fontColor.getBlue();
-		sb.append("\tpixelcache(" + r + ", " + g + ", " + b + ");\n");
+		// int r = fontColor.getRed(), g = fontColor.getBlue(), b = fontColor.getBlue();
+		// sb.append("\tpixelcache(" + r + ", " + g + ", " + b + ");\n");
 
 		sb.append(setVariables());
 
