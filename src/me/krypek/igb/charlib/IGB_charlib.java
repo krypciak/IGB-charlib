@@ -18,7 +18,7 @@ public class IGB_charlib {
 
 		String l2 = charlib.getL2Code();
 
-		PrintWriter pw = new PrintWriter("/home/krypek/Desktop/out.igb_cl2");
+		PrintWriter pw = new PrintWriter("/home/krypek/Desktop/IGB/L2/charlib.igb_l2");
 		pw.println(l2);
 		pw.close();
 		System.out.println(l2);
