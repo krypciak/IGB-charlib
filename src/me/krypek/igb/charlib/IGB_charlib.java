@@ -3,8 +3,8 @@ package me.krypek.igb.charlib;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 import me.krypek.igb.cl1.IGB_MA;
 import me.krypek.utils.Pair;
@@ -12,10 +12,27 @@ import me.krypek.utils.Utils;
 
 public class IGB_charlib {
 
-	public static void main(String[] args) throws IOException {
-		Font font = new Font("Dialog", Font.PLAIN, 12);
+	@SuppressWarnings("unused")
+	public static void main(String[] args) throws Exception {
+		if(false) {
+			String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+			for (int i = 0; i < fonts.length; i++) { System.out.println(fonts[i]); }
+		}
+		//@f:off
+		Font[] fonts = { 
+				new Font("Advanced Pixel-7", Font.PLAIN, 14),
+				new Font("Advanced Pixel-7", Font.PLAIN, 20),
+				new Font("Advanced Pixel-7", Font.BOLD, 20),
+				new Font("Advanced Pixel-7", Font.ITALIC, 14),
+				new Font("Advanced Pixel-7", Font.ITALIC, 20),
+				new Font("Advanced Pixel-7", 3, 20),
+				};
+		//@f:on
+		String[] names = { "small", "big", "bigbold", "smallitalic", "bigitalic", "bigbolditalic" };
 
-		IGB_charlib charlib = new IGB_charlib(font, Color.black, Color.white, 32, 127);
+		assert fonts.length == names.length;
+//32, 127
+		IGB_charlib charlib = new IGB_charlib(fonts, names, 32, 127);
 
 		String l2Code = charlib.getL2Code();
 		Utils.writeIntoFile("/home/krypek/Desktop/IGB/L2/charlib.igb_l2", l2Code);
@@ -26,18 +43,17 @@ public class IGB_charlib {
 		// System.out.println(l2Code);
 	}
 
-	private final Font font;
-	private final Color fontColor;
-	private final Color backgroundColor;
+	private Font currentFont;
+	private final Font[] fonts;
+	private final String[] names;
 	private final int height;
 	private final int width;
 	private final int charMin;
 	private final int charMax;
 
-	public IGB_charlib(Font font, Color fontColor, Color backgroundColor, int charMin, int charMax) {
-		this.font = font;
-		this.fontColor = fontColor;
-		this.backgroundColor = backgroundColor;
+	public IGB_charlib(Font[] fonts, String[] names, int charMin, int charMax) {
+		this.fonts = fonts;
+		this.names = names;
 		this.charMin = charMin;
 		this.charMax = charMax;
 
@@ -52,14 +68,14 @@ public class IGB_charlib {
 	private int[] getCharSize(char c) {
 		BufferedImage t1 = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
 		Graphics2D g = t1.createGraphics();
-		g.setFont(font);
+		g.setFont(currentFont);
 		int width = g.getFontMetrics().stringWidth(c + "");
 		int height = g.getFontMetrics().getHeight();
 		return new int[] { width, height };
 	}
 
 	public BufferedImage getCharImage(char c) {
-		if(!font.canDisplay(c)) {
+		if(!currentFont.canDisplay(c)) {
 			System.out.println("Cant display: \'" + c + "\'");
 			return null;
 		}
@@ -72,13 +88,12 @@ public class IGB_charlib {
 
 		final BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		final Graphics2D g = img.createGraphics();
-		g.setColor(backgroundColor);
+		g.setColor(Color.white);
 		g.fillRect(0, 0, img.getWidth(), img.getHeight());
 
-		g.setFont(font);
-		g.setColor(fontColor);
+		g.setFont(currentFont);
 		g.setColor(Color.black);
-		g.drawString(c + "", 0, 10);
+		g.drawString(c + "", 0, 12);
 
 		g.dispose();
 		return img;
@@ -90,12 +105,12 @@ public class IGB_charlib {
 			$ramcell = 0;
 			$ramlimit = 0;
 			$startLine = 0;
-			$lenlimit = 3500;
+			$lenlimit = 15000;
 			$thread = 0;
 			""";
 
 	private final String FUNC_STRING = """
-			int drawChar(int w0|%d|, int h0|%d|, int c|%d|) {
+			int NAMEdrawchar(int w0|%d|, int h0|%d|, int c|%d|) {
 			""".formatted(IGB_MA.CHARLIB_X, IGB_MA.CHARLIB_Y, IGB_MA.CHARLIB_CHAR);
 
 	private String setVariables() {
@@ -125,18 +140,26 @@ public class IGB_charlib {
 	public String getL2Code() {
 		StringBuilder sb = new StringBuilder(100);
 		sb.append(COMPILERVAR_STRING);
-		sb.append(FUNC_STRING);
 
+		for (int i = 0; i < fonts.length; i++)
+			sb.append(getFunctionCode(i));
 		// int r = fontColor.getRed(), g = fontColor.getBlue(), b = fontColor.getBlue();
 		// sb.append("\tpixelcache(" + r + ", " + g + ", " + b + ");\n");
 
+		return sb.toString();
+	}
+
+	public String getFunctionCode(int index) {
+		this.currentFont = fonts[index];
+		StringBuilder sb = new StringBuilder(100);
+		sb.append(FUNC_STRING.replaceAll("NAME", names[index]));
 		sb.append(setVariables());
 
 		for (char c = (char) charMin; c < charMax; c++) {
-			sb.append(getL2CodeFromChar(c));
 
+			sb.append(getL2CodeFromChar(c));
 		}
-		sb.append("}");
+		sb.append("}\n\n");
 		return sb.toString();
 	}
 
@@ -150,13 +173,16 @@ public class IGB_charlib {
 
 		final int maxWidth = "setpixel(w10, h10); ".length();
 
+		boolean started = false;
+		// boolean ended = false;
 		for (int y = 0; y < img.getHeight(); y++) {
 			StringBuilder sb1 = new StringBuilder(100);
 			sb1.append("\t\t");
 			for (int x = 0; x < img.getWidth(); x++) {
 				Color color = new Color(img.getRGB(x, y));
 
-				if(!color.equals(backgroundColor)) {
+				if(!color.equals(Color.white)) {
+					started = true;
 					String str = "setpixel(w" + x + ", h" + y + ");";
 					sb1.append(str);
 					final int spacesToAdd = maxWidth - str.length();
@@ -168,13 +194,20 @@ public class IGB_charlib {
 			}
 			sb1.append("\n");
 			String str = sb1.toString();
-			if(!str.isBlank())
+			if(str.isBlank()) {
+				if(started)
+					sb.append("\n");
+			} else
 				sb.append(str);
-		}
-		sb.append("\t\treturn " + img.getWidth() + ";\n");
 
-		sb.append("\t}\n");
-		return sb.toString();
+		}
+		String str = sb.toString().stripTrailing();
+		int width = img.getWidth();
+		if(c == ' ')
+			width = 6;
+
+		str += "\n\t\treturn " + width + ";\n\t}\n";
+		return str;
 	}
 
 }
