@@ -31,7 +31,7 @@ public class IGB_charlib {
 		String[] names = { "small", "big", "bigbold", "smallitalic", "bigitalic", "bigbolditalic" };
 
 		assert fonts.length == names.length;
-//32, 127
+		// 32, 127
 		IGB_charlib charlib = new IGB_charlib(fonts, names, 32, 127);
 
 		String l2Code = charlib.getL2Code();
