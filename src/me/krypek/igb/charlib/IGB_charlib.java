@@ -3,57 +3,52 @@ package me.krypek.igb.charlib;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
 import java.awt.image.BufferedImage;
 
 import me.krypek.igb.cl1.IGB_MA;
 import me.krypek.utils.Pair;
-import me.krypek.utils.Utils;
 
 public class IGB_charlib {
 
-	@SuppressWarnings("unused")
+	public record FontToGenerate(Font font, String name) {}
+
 	public static void main(String[] args) throws Exception {
-		if(false) {
-			String fonts[] = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
-			for (int i = 0; i < fonts.length; i++) { System.out.println(fonts[i]); }
-		}
+
+		// Print out all available fonts
+		// String fonts[] =
+		// GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+		// for (int i = 0; i < fonts.length; i++) { System.out.println(fonts[i]); }
+
 		//@f:off
-		Font[] fonts = { 
-				new Font("Advanced Pixel-7", Font.PLAIN, 14),
-				new Font("Advanced Pixel-7", Font.PLAIN, 20),
-				new Font("Advanced Pixel-7", Font.BOLD, 20),
-				new Font("Advanced Pixel-7", Font.ITALIC, 14),
-				new Font("Advanced Pixel-7", Font.ITALIC, 20),
-				new Font("Advanced Pixel-7", 3, 20),
-				};
+		FontToGenerate[] fontsToGenerate = {
+			//				   			font name			font type		size   NAME (generates function named ${NAME}drawchar())
+			new FontToGenerate(new Font("Advanced Pixel-7", Font.PLAIN, 	14),   "small"),
+			new FontToGenerate(new Font("Advanced Pixel-7", Font.PLAIN, 	20),   "big"),
+			new FontToGenerate(new Font("Advanced Pixel-7", Font.BOLD, 		20),   "bigblod"),
+			new FontToGenerate(new Font("Advanced Pixel-7", Font.ITALIC, 	14),   "smallitalic"),
+			new FontToGenerate(new Font("Advanced Pixel-7", Font.ITALIC, 	20),   "bigitalic"),
+			new FontToGenerate(new Font("Advanced Pixel-7", 3, 				20),   "bigbolditalic")
+		};
 		//@f:on
-		String[] names = { "small", "big", "bigbold", "smallitalic", "bigitalic", "bigbolditalic" };
 
-		assert fonts.length == names.length;
-		// 32, 127
-		IGB_charlib charlib = new IGB_charlib(fonts, names, 32, 127);
+		IGB_charlib charlib = new IGB_charlib(fontsToGenerate, 32, 127);
 
-		String l2Code = charlib.getL2Code();
-		Utils.writeIntoFile("/home/krypek/Desktop/IGB/L2/charlib.igb_l2", l2Code);
+		// String l2Code = charlib.getL2Code();
+		// Utils.writeIntoFile("path to write l2code", l2Code);
 
-		var pair = charlib.getFormatedL2Code();
-		Utils.serialize(pair, "/home/krypek/Desktop/IGB/L2/charlib.bin");
-
-		// System.out.println(l2Code);
+		// var pair = charlib.getFormatedL2Code();
+		// Utils.serialize(pair, "path to write formated l2 code");
 	}
 
 	private Font currentFont;
-	private final Font[] fonts;
-	private final String[] names;
+	private final FontToGenerate[] fonts;
 	private final int height;
 	private final int width;
 	private final int charMin;
 	private final int charMax;
 
-	public IGB_charlib(Font[] fonts, String[] names, int charMin, int charMax) {
+	public IGB_charlib(FontToGenerate[] fonts, int charMin, int charMax) {
 		this.fonts = fonts;
-		this.names = names;
 		this.charMin = charMin;
 		this.charMax = charMax;
 
@@ -143,16 +138,14 @@ public class IGB_charlib {
 
 		for (int i = 0; i < fonts.length; i++)
 			sb.append(getFunctionCode(i));
-		// int r = fontColor.getRed(), g = fontColor.getBlue(), b = fontColor.getBlue();
-		// sb.append("\tpixelcache(" + r + ", " + g + ", " + b + ");\n");
 
 		return sb.toString();
 	}
 
 	public String getFunctionCode(int index) {
-		this.currentFont = fonts[index];
+		this.currentFont = fonts[index].font();
 		StringBuilder sb = new StringBuilder(100);
-		sb.append(FUNC_STRING.replaceAll("NAME", names[index]));
+		sb.append(FUNC_STRING.replaceAll("NAME", fonts[index].name()));
 		sb.append(setVariables());
 
 		for (char c = (char) charMin; c < charMax; c++) {
