@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 
 import me.krypek.igb.cl1.IGB_MA;
 import me.krypek.utils.Pair;
+import me.krypek.utils.Utils;
 
 public class IGB_charlib {
 
@@ -33,11 +34,11 @@ public class IGB_charlib {
 
 		IGB_charlib charlib = new IGB_charlib(fontsToGenerate, 32, 127);
 
-		// String l2Code = charlib.getL2Code();
-		// Utils.writeIntoFile("path to write l2code", l2Code);
+		String l2Code = charlib.getL2Code();
+		Utils.writeIntoFile("path", l2Code);
 
-		// var pair = charlib.getFormatedL2Code();
-		// Utils.serialize(pair, "path to write formated l2 code");
+		var pair = charlib.getFormatedL2Code();
+		Utils.serialize(pair, "path");
 	}
 
 	private Font currentFont;
@@ -105,7 +106,7 @@ public class IGB_charlib {
 			""";
 
 	private final String FUNC_STRING = """
-			int NAMEdrawchar(int w0|%d|, int h0|%d|, int c|%d|) {
+			var NAMEdrawchar(var w0|%d|, var h0|%d|, var c|%d|) {
 			""".formatted(IGB_MA.CHARLIB_X, IGB_MA.CHARLIB_Y, IGB_MA.CHARLIB_CHAR);
 
 	private String setVariables() {
@@ -115,13 +116,13 @@ public class IGB_charlib {
 
 		for (int i = 1; i < width; i++, cell++) {
 			String space = (i < 10 ? " " : "");
-			sb.append("\tint w" + i + space + "|" + cell + "|" + " = w0 + " + i + space + ";\n");
+			sb.append("\tvar w" + i + space + "|" + cell + "|" + " = w0 + " + i + space + ";\n");
 		}
 		sb.append("\n");
 		// height
 		for (int i = 1; i < height; i++, cell++) {
 			String space = (i < 10 ? " " : "");
-			sb.append("\tint h" + i + space + "|" + cell + "|" + " = h0 + " + i + space + ";\n");
+			sb.append("\tvar h" + i + space + "|" + cell + "|" + " = h0 + " + i + space + ";\n");
 		}
 		return sb.toString();
 	}
