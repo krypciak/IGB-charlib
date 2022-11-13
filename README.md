@@ -18,7 +18,7 @@ me.krypek.utils.Pair<String[], int[]> pair = charlib.getFormatedL2Code();
 
 
 ## Dependencies:
-- [Utils](https://github.com/krypciak/Utils)  
+- [Java-Utils](https://github.com/krypciak/Java-Utils)  
 - [IGB-Compiler-L1](https://github.com/krypciak/IGB-Compiler-L1)  
 - [IGB-Compiler-L2](https://github.com/krypciak/IGB-Compiler-L2)  
 - [Advanced Pixel-7](https://www.1001freefonts.com/advanced-pixel-7.font) font installed
